@@ -27,6 +27,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     private AMapLocationClientOption mLocationOption;
     private OnLocationChangedListener mListener;
     private boolean isFirstLoc = true;
+    private  static int LocationCounter = 0;
     TextView mTextView;
 
 
@@ -57,7 +58,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         mLocationOption.setNeedAddress(true);
         mLocationOption.setOnceLocationLatest(false);
         mapLocationClient.setLocationOption(mLocationOption);
-        mapLocationClient.setLocationListener(mLocationListener);
+       // mapLocationClient.setLocationListener(mLocationListener);
         mapLocationClient.startLocation();
 
     }
@@ -70,23 +71,25 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     @Override
     public void deactivate() {
         mListener = null;
-
     }
 
     public AMapLocationListener mLocationListener = new AMapLocationListener() {
         @Override
         public void onLocationChanged(AMapLocation aMapLocation) {
-            Toast.makeText(blueMapActivity.this,"onLocationChanged",Toast.LENGTH_SHORT).show();
-            mTextView.setText("start loading....");
+            Toast.makeText(blueMapActivity.this,"mLocationListener",Toast.LENGTH_SHORT).show();
+            //mTextView.setText("start loading....");
         }
     };
+    public  
+
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if((aMapLocation != null) && (aMapLocation.getErrorCode() == 0)){
-            Toast.makeText(blueMapActivity.this,"onLcationChanged",Toast.LENGTH_SHORT).show();
+            LocationCounter++;
+            //Toast.makeText(blueMapActivity.this,"onLcationChanged",Toast.LENGTH_SHORT).show();
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("经纬度:").append(aMapLocation.getLatitude())
-                    .append(  aMapLocation.getLongitude());
+                    .append("  "+aMapLocation.getLongitude()).append("\nLocationCounter:"+LocationCounter);
             mTextView.setText(stringBuilder);
 
             if(isFirstLoc){
@@ -100,7 +103,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         }else{
             Toast.makeText(blueMapActivity.this,"location fail",Toast.LENGTH_SHORT).show();
         }
-
     }
 
     private MarkerOptions getMarkerOptions(AMapLocation amapLocation){
@@ -113,7 +115,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         options.title(buffer.toString());
         return options;
     }
-
 
     /**
      * 方法必须重写
@@ -132,7 +133,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         super.onPause();
         mMapView.onPause();
     }
-
 
     /**
      * 方法必须重写
