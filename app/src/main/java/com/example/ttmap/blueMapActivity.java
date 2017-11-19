@@ -52,7 +52,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         mapLocationClient.setLocationListener(this);
         mLocationOption = new AMapLocationClientOption();
         mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-        mLocationOption.setInterval(2000);
+        mLocationOption.setInterval(10000);
         mLocationOption.setSensorEnable(true);
         mLocationOption.setNeedAddress(true);
         mLocationOption.setOnceLocationLatest(false);
@@ -95,6 +95,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
                         changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                 mListener.onLocationChanged(aMapLocation);
                 aMap.addMarker(getMarkerOptions(aMapLocation));
+                isFirstLoc =false;
             }
         }else{
             Toast.makeText(blueMapActivity.this,"location fail",Toast.LENGTH_SHORT).show();
