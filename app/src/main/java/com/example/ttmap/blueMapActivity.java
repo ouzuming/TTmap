@@ -1,8 +1,12 @@
 package com.example.ttmap;
 
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,11 +20,22 @@ import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.UiSettings;
+import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.GroundOverlay;
+import com.amap.api.maps.model.GroundOverlayOptions;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
+import com.amap.api.maps.model.MyLocationStyle;
 
-public class blueMapActivity extends AppCompatActivity implements LocationSource,AMapLocationListener{
+import java.util.ArrayList;
+
+import static android.icu.text.Normalizer.YES;
+
+public class blueMapActivity extends AppCompatActivity implements LocationSource,AMapLocationListener
+,AMap.OnMarkerClickListener,AMap.InfoWindowAdapter,AMap.OnInfoWindowClickListener,
+        AMap.OnMapClickListener,AMap.OnMapLongClickListener{
     private MapView mMapView;
     private AMap aMap;
     private AMapLocationClient mapLocationClient;
@@ -29,6 +44,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     private boolean isFirstLoc = true;
     private  static int LocationCounter = 0;
     TextView mTextView;
+    Button mapTypeBtn;
 
 
     @Override
@@ -36,16 +52,43 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blue_map);
         mTextView = (TextView) findViewById(R.id.blue_tv1);
+        mapTypeBtn = (Button) findViewById(R.id.mapTypeBtn);
         mMapView  = (MapView) findViewById(R.id.bluemap);
         mMapView.onCreate(savedInstanceState);
         aMap = mMapView.getMap();
 
         UiSettings settings = aMap.getUiSettings();
         aMap.setLocationSource(this);
-        //settings.setMyLocationButtonEnabled(true);
+        settings.setMyLocationButtonEnabled(true);
+        settings.setCompassEnabled(true);
+        settings.setMyLocationButtonEnabled(true);
         aMap.setMyLocationEnabled(true);
+        //aMap.setMapType(AMap.MAP_TYPE_NORMAL);
+        aMap.setMapType(AMap.MAP_TYPE_NORMAL);
+        aMap.setOnMarkerClickListener(this);
         ininLoc();
+        setMapLocationStyle();
+        aMap.setOnMapClickListener(this);
+        aMap.setOnMapLongClickListener(this);
+        aMap.setInfoWindowAdapter(this);
+
+        mapTypeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mapTypeBtn.getText().equals("卫星地图")){
+                    Toast.makeText(blueMapActivity.this,"卫星地图",Toast.LENGTH_SHORT).show();
+                    mapTypeBtn.setText("平面地图");
+                    aMap.setMapType(AMap.MAP_TYPE_SATELLITE);
+                }else if(mapTypeBtn.getText().equals("平面地图")){
+                    Toast.makeText(blueMapActivity.this,"平面地图",Toast.LENGTH_SHORT).show();
+                    mapTypeBtn.setText("卫星地图");
+                    aMap.setMapType(AMap.MAP_TYPE_NORMAL);
+                }
+               // addOverlayToMap();
+            }
+        });
     }
+
 
     private void  ininLoc()
     {
@@ -57,10 +100,17 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         mLocationOption.setSensorEnable(true);
         mLocationOption.setNeedAddress(true);
         mLocationOption.setOnceLocationLatest(false);
-        mapLocationClient.setLocationOption(mLocationOption);
-       // mapLocationClient.setLocationListener(mLocationListener);
-        mapLocationClient.startLocation();
 
+        mapLocationClient.setLocationOption(mLocationOption);
+        mapLocationClient.startLocation();
+    }
+    private  void setMapLocationStyle(){
+        MyLocationStyle myLocationStyle = new MyLocationStyle();
+//        myLocationStyle.myLocationIcon(BitmapDescriptorFactory.
+//                fromResource(R.drawable.maps_dav_compass_needle_large2d));
+        myLocationStyle.strokeColor(Color.RED);   // 边框颜色
+        myLocationStyle.strokeWidth(2);
+        aMap.setMyLocationStyle(myLocationStyle);
     }
 
     @Override
@@ -80,41 +130,65 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
             //mTextView.setText("start loading....");
         }
     };
-    public  
+
 
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if((aMapLocation != null) && (aMapLocation.getErrorCode() == 0)){
             LocationCounter++;
-            //Toast.makeText(blueMapActivity.this,"onLcationChanged",Toast.LENGTH_SHORT).show();
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("经纬度:").append(aMapLocation.getLatitude())
-                    .append("  "+aMapLocation.getLongitude()).append("\nLocationCounter:"+LocationCounter);
+            stringBuilder.append("经纬度:").append((long) aMapLocation.getLatitude())
+                    .append("  "+(long)aMapLocation.getLongitude()).append("\nLocationCounter:"+LocationCounter);
             mTextView.setText(stringBuilder);
 
             if(isFirstLoc){
+                Toast.makeText(blueMapActivity.this,"siFirstLoc",Toast.LENGTH_SHORT).show();
                 aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
                 aMap.moveCamera(CameraUpdateFactory.
                         changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
                 mListener.onLocationChanged(aMapLocation);
                 aMap.addMarker(getMarkerOptions(aMapLocation));
                 isFirstLoc =false;
+                mListener.onLocationChanged(aMapLocation);
             }
+
+
         }else{
             Toast.makeText(blueMapActivity.this,"location fail",Toast.LENGTH_SHORT).show();
         }
     }
 
     private MarkerOptions getMarkerOptions(AMapLocation amapLocation){
+        ArrayList<BitmapDescriptor> iconList = new ArrayList<>();
+        iconList.add(BitmapDescriptorFactory.fromResource(R.drawable.yellow));
+        iconList.add(BitmapDescriptorFactory.fromResource(R.drawable.violet2));
         MarkerOptions options = new MarkerOptions();
-        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_default2d));
+        options.anchor(0.5f,0.5f);
+        options.icons(iconList);
+        options.draggable(true);
+        options.period(50);
         options.position(new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude()));
         StringBuffer buffer = new StringBuffer();
         buffer.append(amapLocation.getCountry() + "" + amapLocation.getProvince() + "" + amapLocation.getCity() +  "" + amapLocation.getDistrict() + "" + amapLocation.getStreet() + "" + amapLocation.getStreetNum());
         //标题
-        options.title(buffer.toString());
+        options.title("position:").snippet(buffer.toString());
+        options.draggable(true);
+
+
         return options;
     }
+    // 添加图片到地图上
+    private void addOverlayToMap(){
+        GroundOverlayOptions groudOverlayOptions = new GroundOverlayOptions();
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(39.90886,116.39739),15));
+        groudOverlayOptions.anchor(0.5f, 0.5f);
+        groudOverlayOptions.transparency(0f);
+        groudOverlayOptions.position(new LatLng(39.90886,116.39739),512,512);
+        groudOverlayOptions.image(BitmapDescriptorFactory.fromResource(R.drawable.mapworld));
+        aMap.addGroundOverlay(groudOverlayOptions);
+        Toast.makeText(blueMapActivity.this,"addOVerlayTOMap",Toast.LENGTH_SHORT).show();
+    }
+
 
     /**
      * 方法必须重写
@@ -150,5 +224,47 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     protected void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+
+       // marker.setInfoWindowEnable(true);
+       // marker.showInfoWindow();
+
+       Toast.makeText(blueMapActivity.this,"onMarkerClick",Toast.LENGTH_SHORT).show();
+        return false;
+    }
+
+
+    @Override
+    public View getInfoWindow(Marker marker) {
+
+        return null;
+    }
+
+    @Override
+    public View getInfoContents(Marker marker) {
+        Toast.makeText(blueMapActivity.this,"getInfoContents",Toast.LENGTH_SHORT).show();
+        return null;
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(blueMapActivity.this,"onInfoWindowClick",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        Toast.makeText(blueMapActivity.this,"onMapClick",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(blueMapActivity.this, (int) latLng.longitude,Toast.LENGTH_SHORT).show();
+        mTextView.setText(""+latLng);
+
+
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        Toast.makeText(blueMapActivity.this,"onMapLongClick",Toast.LENGTH_SHORT).show();
     }
 }
