@@ -10,12 +10,23 @@
         android:text="where i am!"
         android:textSize="20sp"
         android:textColor="#02d"/>
-    <Button
-        android:id="@+id/mapTypeBtn"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="卫星地图"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/mapTypeBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="卫星地图"/>
+        <Button
+            android:id="@+id/mapClearBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="清除mark"
+            android:textAllCaps="false" />
 
+    </LinearLayout>
     <com.amap.api.maps.MapView
         android:id="@+id/bluemap"
         android:layout_width="match_parent"

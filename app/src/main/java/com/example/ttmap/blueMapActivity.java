@@ -35,7 +35,8 @@ import static android.icu.text.Normalizer.YES;
 
 public class blueMapActivity extends AppCompatActivity implements LocationSource,AMapLocationListener
 ,AMap.OnMarkerClickListener,AMap.InfoWindowAdapter,AMap.OnInfoWindowClickListener,
-        AMap.OnMapClickListener,AMap.OnMapLongClickListener{
+        AMap.OnMapClickListener,AMap.OnMapLongClickListener,View.OnClickListener{
+    private int markCounter = 0;
     private MapView mMapView;
     private AMap aMap;
     private AMapLocationClient mapLocationClient;
@@ -45,7 +46,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     private  static int LocationCounter = 0;
     TextView mTextView;
     Button mapTypeBtn;
-
+    Button mapClearBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +54,7 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         setContentView(R.layout.activity_blue_map);
         mTextView = (TextView) findViewById(R.id.blue_tv1);
         mapTypeBtn = (Button) findViewById(R.id.mapTypeBtn);
+        mapClearBtn = (Button) findViewById(R.id.mapClearBtn);
         mMapView  = (MapView) findViewById(R.id.bluemap);
         mMapView.onCreate(savedInstanceState);
         aMap = mMapView.getMap();
@@ -71,22 +73,24 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         aMap.setOnMapClickListener(this);
         aMap.setOnMapLongClickListener(this);
         aMap.setInfoWindowAdapter(this);
+        mapTypeBtn.setOnClickListener(this);
+        mapClearBtn.setOnClickListener(this);
 
-        mapTypeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mapTypeBtn.getText().equals("卫星地图")){
-                    Toast.makeText(blueMapActivity.this,"卫星地图",Toast.LENGTH_SHORT).show();
-                    mapTypeBtn.setText("平面地图");
-                    aMap.setMapType(AMap.MAP_TYPE_SATELLITE);
-                }else if(mapTypeBtn.getText().equals("平面地图")){
-                    Toast.makeText(blueMapActivity.this,"平面地图",Toast.LENGTH_SHORT).show();
-                    mapTypeBtn.setText("卫星地图");
-                    aMap.setMapType(AMap.MAP_TYPE_NORMAL);
-                }
-               // addOverlayToMap();
-            }
-        });
+//        mapTypeBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if(mapTypeBtn.getText().equals("卫星地图")){
+//                    Toast.makeText(blueMapActivity.this,"卫星地图",Toast.LENGTH_SHORT).show();
+//                    mapTypeBtn.setText("平面地图");
+//                    aMap.setMapType(AMap.MAP_TYPE_SATELLITE);
+//                }else if(mapTypeBtn.getText().equals("平面地图")){
+//                    Toast.makeText(blueMapActivity.this,"平面地图",Toast.LENGTH_SHORT).show();
+//                    mapTypeBtn.setText("卫星地图");
+//                    aMap.setMapType(AMap.MAP_TYPE_NORMAL);
+//                }
+//               // addOverlayToMap();
+//            }
+//        });
     }
 
 
@@ -131,7 +135,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         }
     };
 
-
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if((aMapLocation != null) && (aMapLocation.getErrorCode() == 0)){
@@ -151,8 +154,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
                 isFirstLoc =false;
                 mListener.onLocationChanged(aMapLocation);
             }
-
-
         }else{
             Toast.makeText(blueMapActivity.this,"location fail",Toast.LENGTH_SHORT).show();
         }
@@ -174,7 +175,6 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         options.title("position:").snippet(buffer.toString());
         options.draggable(true);
 
-
         return options;
     }
     // 添加图片到地图上
@@ -189,6 +189,19 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
         Toast.makeText(blueMapActivity.this,"addOVerlayTOMap",Toast.LENGTH_SHORT).show();
     }
 
+    public void mapAddMark(LatLng mLatlng){
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.violet2));
+        markerOptions.anchor(0.5f,0.5f);
+        markerOptions.draggable(true);
+        markerOptions.title("position");
+        StringBuilder mBuilder = new StringBuilder();
+        mBuilder.append(mLatlng.longitude).append("  ").append(mLatlng.latitude);
+        markerOptions.snippet(mBuilder.toString());
+        markerOptions.position(mLatlng);
+        aMap.addMarker(markerOptions);
+        Toast.makeText(blueMapActivity.this,"map add mark",Toast.LENGTH_SHORT).show();
+    }
 
     /**
      * 方法必须重写
@@ -229,10 +242,10 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
     @Override
     public boolean onMarkerClick(Marker marker) {
 
-       // marker.setInfoWindowEnable(true);
-       // marker.showInfoWindow();
+        marker.setInfoWindowEnable(true);
+        marker.showInfoWindow();
 
-       Toast.makeText(blueMapActivity.this,"onMarkerClick",Toast.LENGTH_SHORT).show();
+       //Toast.makeText(blueMapActivity.this,"onMarkerClick",Toast.LENGTH_SHORT).show();
         return false;
     }
 
@@ -245,26 +258,52 @@ public class blueMapActivity extends AppCompatActivity implements LocationSource
 
     @Override
     public View getInfoContents(Marker marker) {
-        Toast.makeText(blueMapActivity.this,"getInfoContents",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(blueMapActivity.this,"getInfoContents",Toast.LENGTH_SHORT).show();
         return null;
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Toast.makeText(blueMapActivity.this,"onInfoWindowClick",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(blueMapActivity.this,"onInfoWindowClick",Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
+
         Toast.makeText(blueMapActivity.this,"onMapClick",Toast.LENGTH_SHORT).show();
         //Toast.makeText(blueMapActivity.this, (int) latLng.longitude,Toast.LENGTH_SHORT).show();
         mTextView.setText(""+latLng);
-
 
     }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
         Toast.makeText(blueMapActivity.this,"onMapLongClick",Toast.LENGTH_SHORT).show();
+        if(markCounter < 5){
+            Toast.makeText(blueMapActivity.this,"markCounter"+markCounter,Toast.LENGTH_SHORT).show();
+            mapAddMark(latLng);
+            markCounter++;
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.mapTypeBtn:
+                if(mapTypeBtn.getText().equals("卫星地图")){
+                    Toast.makeText(blueMapActivity.this,"卫星地图",Toast.LENGTH_SHORT).show();
+                    mapTypeBtn.setText("平面地图");
+                    aMap.setMapType(AMap.MAP_TYPE_SATELLITE);
+                }else if(mapTypeBtn.getText().equals("平面地图")){
+                    Toast.makeText(blueMapActivity.this,"平面地图",Toast.LENGTH_SHORT).show();
+                    mapTypeBtn.setText("卫星地图");
+                    aMap.setMapType(AMap.MAP_TYPE_NORMAL);
+                }
+                // addOverlayToMap();
+                break;
+            case R.id.mapClearBtn:
+                aMap.clear();
+                break;
+        }
     }
 }
